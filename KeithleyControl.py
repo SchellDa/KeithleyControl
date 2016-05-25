@@ -3,18 +3,18 @@
 import sys, time, math
 from serial import *
 
-class keithley:
+class Keithley:
 
-    def __init__(self):
+    def __init__(self, port='/dev/ttyS0'):
         #
         # Open port
         #
         #Syntax: serial.Serial(port=None, baudrate=9600, bytesize=EIGHTBITS, parity=PARITY_NONE,
         #                      stopbits=STOPBITS_ONE, timeout=None, xonxoff=False, rtscts=False,
         #                      writeTimeout=None, dsrdtr=False, interCharTimeout=None)
-        self.port = Serial('/dev/ttyS0', baudrate=57600, bytesize=8, parity=PARITY_ODD, xonxoff=True)
+        self.port = Serial(port, baudrate=57600, bytesize=8, parity=PARITY_ODD, xonxoff=True)
 
-    def init(self):
+    def init(self, rear=True, compl=100):
         #
         # Custom settings
         #
@@ -28,9 +28,12 @@ class keithley:
         # Set output voltage to zero
         self.port.write(":SOUR:VOLT:IMM:AMPL 0\r\n");
         # Voltage output on rear panel plugs
-        self.port.write(":ROUT:TERM REAR\r\n");
+        if rear:
+            self.port.write(":ROUT:TERM REAR\r\n");
+        else:
+            self.port.write(":ROUT:TERM FRONT\r\n");
         # Set compliance to 100uA
-        self.port.write(":CURR:PROT:LEV 100E-6\r\n")
+        self.port.write(":CURR:PROT:LEV %sE-6\r\n", %compl)
 
     def setCompliance(self,complcurrent=100):
 
@@ -126,7 +129,7 @@ def readMode(k):
 if __name__=='__main__':
 
     # Instanciate Keithly
-    k = keithley()
+    k = Keithley()
 
     # Check command line arguments
     if (len(sys.argv) > 1):
